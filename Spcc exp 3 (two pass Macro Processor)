@@ -1,0 +1,441 @@
+OPTION 1:-
+#include<stdio.h>      // For input-output functions
+#include<conio.h>      // For clrscr() and getch()
+#include<stdlib.h>     // For malloc()
+#include<string.h>     // For string handling
+
+/* Global counters for indexing tables */
+int MDTC = 1;   // Macro Definition Table Counter
+int MNTC = 1;   // Macro Name Table Counter
+
+/* Structure for MDT (Macro Definition Table) */
+struct MDT {
+    int index;                      // Index of instruction
+    char instruction[100];          // Stores full instruction
+    struct MDT *next;               // Pointer to next MDT entry
+};
+
+/* Structure for MNT (Macro Name Table) */
+struct MNT {
+    int index;                      // Index of macro
+    char name[20];                  // Macro name
+    struct MDT *mdtPtr;             // Pointer to MDT entry
+    struct MNT *next;               // Pointer to next MNT entry
+};
+
+/* Head pointers for tables */
+struct MDT *mdtHead = NULL;
+struct MNT *mntHead = NULL;
+
+/* Function to find macro in MNT */
+struct MDT* findMacro(char *name)
+{
+    struct MNT *temp;
+    temp = mntHead;
+
+    /* Traverse MNT to find macro */
+    while(temp != NULL)
+    {
+        if(strcmp(temp->name, name) == 0)
+            return temp->mdtPtr;    // Return pointer to MDT
+        temp = temp->next;
+    }
+    return NULL;   // If not found
+}
+
+/* PASS 1: Create MNT and MDT */
+void pass1(FILE *fp)
+{
+    char line[100];      // To read each line
+    char name[20];       // To store macro name
+
+    /* Declare pointers at top (Turbo C rule) */
+    struct MDT *mdtTemp;
+    struct MDT *mdtNode;
+    struct MDT *newNode;
+    struct MDT *endNode;
+    struct MNT *mntNode;
+
+    /* Read file line by line */
+    while(fgets(line, sizeof(line), fp) != NULL)
+    {
+        /* Check for MACRO keyword */
+        if(strncmp(line, "MACRO", 5) == 0)
+        {
+            printf("\nMACRO detected");
+
+            /* Read macro name */
+            fgets(line, sizeof(line), fp);
+            sscanf(line, "%s", name);
+
+            /* Create MNT entry */
+            mntNode = (struct MNT*)malloc(sizeof(struct MNT));
+            mntNode->index = MNTC++;
+            strcpy(mntNode->name, name);
+            mntNode->next = mntHead;
+            mntHead = mntNode;
+
+            /* Create MDT header entry */
+            mdtNode = (struct MDT*)malloc(sizeof(struct MDT));
+            mdtNode->index = MDTC++;
+            strcpy(mdtNode->instruction, name);
+            mdtNode->next = NULL;
+
+            mdtHead = mdtNode;
+            mdtTemp = mdtNode;
+            mntNode->mdtPtr = mdtNode;
+
+            /* Read macro body */
+            while(fgets(line, sizeof(line), fp) != NULL)
+            {
+                /* Check for MEND */
+                if(strncmp(line, "MEND", 4) == 0)
+                {
+                    endNode = (struct MDT*)malloc(sizeof(struct MDT));
+                    endNode->index = MDTC++;
+                    strcpy(endNode->instruction, "MEND");
+                    endNode->next = NULL;
+
+                    mdtTemp->next = endNode;
+                    mdtTemp = endNode;
+                    break;
+                }
+
+                /* Store full instruction in MDT */
+                newNode = (struct MDT*)malloc(sizeof(struct MDT));
+                newNode->index = MDTC++;
+                strcpy(newNode->instruction, line);
+
+                newNode->next = NULL;
+                mdtTemp->next = newNode;
+                mdtTemp = newNode;
+            }
+        }
+    }
+
+    printf("\nPass 1 Complete");
+}
+
+/* PASS 2: Expand macros */
+void pass2(FILE *fp)
+{
+    char line[100];     // To read line
+    char word[20];      // First word of line
+
+    struct MDT *mdt;
+    FILE *ofp;
+
+    /* Open output file */
+    ofp = fopen("output.txt", "w");
+
+    rewind(fp);   // Go back to start
+
+    while(fgets(line, sizeof(line), fp) != NULL)
+    {
+        sscanf(line, "%s", word);   // Read first word
+
+        /* Check if it is a macro call */
+        mdt = findMacro(word);
+
+        if(mdt != NULL)
+        {
+            /* Expand macro */
+            mdt = mdt->next;
+
+            while(mdt != NULL && strcmp(mdt->instruction, "MEND") != 0)
+            {
+                fprintf(ofp, "%s", mdt->instruction);
+                mdt = mdt->next;
+            }
+        }
+        else
+        {
+            /* Write normal instruction */
+            fputs(line, ofp);
+        }
+    }
+
+    fclose(ofp);
+
+    printf("\nPass 2 Complete");
+}
+
+/* MAIN FUNCTION */
+void main()
+{
+    FILE *fp;
+
+    clrscr();
+
+    /* Open input file */
+    fp = fopen("input.asm", "r");
+
+    if(fp == NULL)
+    {
+        printf("File not found");
+        getch();
+        return;
+    }
+
+    printf("\nPass 1...");
+    pass1(fp);
+
+    printf("\nPass 2...");
+    pass2(fp);
+
+    fclose(fp);
+
+    printf("\nCheck output.txt");
+    getch();
+}
+
+
+
+
+
+input.asm
+MACRO
+INCR &X
+MOV &X, A
+ADD A, #1
+MEND
+
+START 100
+INCR NUM
+END
+
+
+output.txt (will create automatically)
+MACRO
+MOV &X, A
+ADD A, #1
+MOV &X, A
+ADD A, #1
+MEND
+
+START 100
+MOV &X, A
+ADD A, #1
+END
+
+
+
+
+
+
+
+
+OPTION 2:-
+#include<stdio.h>      // Input-output
+#include<conio.h>      // clrscr(), getch()
+#include<stdlib.h>     // malloc()
+#include<string.h>     // string functions
+
+/* Global counters */
+int MDTC = 1;
+int MNTC = 1;
+int ALA_INDEX = 1;
+
+/* ALA structure (Argument List Array) */
+struct ALA {
+    int index;
+    char arg[20];
+    struct ALA *next;
+};
+
+/* MDT structure */
+struct MDT {
+    int index;
+    char instruction[100];
+    struct MDT *next;
+};
+
+/* MNT structure */
+struct MNT {
+    int index;
+    char name[20];
+    struct MDT *mdtPtr;
+    struct MNT *next;
+};
+
+/* Head pointers */
+struct ALA *alaHead = NULL;
+struct MDT *mdtHead = NULL;
+struct MNT *mntHead = NULL;
+
+/* Find macro in MNT */
+struct MDT* findMacro(char *name)
+{
+    struct MNT *temp;
+    temp = mntHead;
+
+    while(temp != NULL)
+    {
+        if(strcmp(temp->name, name) == 0)
+            return temp->mdtPtr;
+        temp = temp->next;
+    }
+    return NULL;
+}
+
+/* PASS 1 */
+void pass1(FILE *fp)
+{
+    char line[100];
+    char name[20];
+    char arg[20];
+
+    struct MDT *mdtTemp;
+    struct MDT *mdtNode;
+    struct MDT *newNode;
+    struct MDT *endNode;
+
+    struct MNT *mntNode;
+    struct ALA *alaNode;
+
+    while(fgets(line, sizeof(line), fp) != NULL)
+    {
+        /* Detect MACRO */
+        if(strncmp(line, "MACRO", 5) == 0)
+        {
+            printf("\nMACRO ");
+
+            fgets(line, sizeof(line), fp);
+            sscanf(line, "%s %s", name, arg);
+
+            printf("%s Detected...\n", name);
+
+            /* MNT entry */
+            mntNode = (struct MNT*)malloc(sizeof(struct MNT));
+            mntNode->index = MNTC++;
+            strcpy(mntNode->name, name);
+            mntNode->next = mntHead;
+            mntHead = mntNode;
+
+            printf("\n%s added into Name Table", name);
+
+            /* ALA entry */
+            alaNode = (struct ALA*)malloc(sizeof(struct ALA));
+            alaNode->index = ALA_INDEX++;
+            strcpy(alaNode->arg, arg);
+            alaNode->next = alaHead;
+            alaHead = alaNode;
+
+            printf("\nArgument %s added into ALA", arg);
+
+            /* MDT header */
+            mdtNode = (struct MDT*)malloc(sizeof(struct MDT));
+            mdtNode->index = MDTC++;
+            strcpy(mdtNode->instruction, name);
+            mdtNode->next = NULL;
+
+            mdtHead = mdtNode;
+            mdtTemp = mdtNode;
+            mntNode->mdtPtr = mdtNode;
+
+            printf("\nDefinition Table entry created for %s", name);
+
+            /* Macro body */
+            while(fgets(line, sizeof(line), fp) != NULL)
+            {
+                if(strncmp(line, "MEND", 4) == 0)
+                {
+                    endNode = (struct MDT*)malloc(sizeof(struct MDT));
+                    endNode->index = MDTC++;
+                    strcpy(endNode->instruction, "MEND");
+                    endNode->next = NULL;
+
+                    mdtTemp->next = endNode;
+                    mdtTemp = endNode;
+
+                    printf("\nMEND added at index %d", endNode->index);
+                    break;
+                }
+
+                newNode = (struct MDT*)malloc(sizeof(struct MDT));
+                newNode->index = MDTC++;
+
+                strcpy(newNode->instruction, line);
+
+                newNode->next = NULL;
+                mdtTemp->next = newNode;
+                mdtTemp = newNode;
+
+                printf("\nEntry appended for %s at index %d",
+                       newNode->instruction, newNode->index);
+            }
+        }
+    }
+
+    printf("\n\nAll tables updated. Pass 1 Complete!\n");
+}
+
+/* PASS 2 */
+void pass2(FILE *fp)
+{
+    char line[100];
+    char word[20];
+
+    struct MDT *mdt;
+    FILE *ofp;
+
+    ofp = fopen("output.txt", "w");
+
+    rewind(fp);
+
+    while(fgets(line, sizeof(line), fp) != NULL)
+    {
+        sscanf(line, "%s", word);
+
+        mdt = findMacro(word);
+
+        if(mdt != NULL)
+        {
+            printf("\nExpanding macro %s", word);
+
+            mdt = mdt->next;
+
+            while(mdt != NULL && strcmp(mdt->instruction, "MEND") != 0)
+            {
+                fprintf(ofp, "%s", mdt->instruction);
+                mdt = mdt->next;
+            }
+        }
+        else
+        {
+            fputs(line, ofp);
+        }
+    }
+
+    fclose(ofp);
+
+    printf("\nPass 2 Complete!\n");
+}
+
+/* MAIN */
+void main()
+{
+    FILE *fp;
+
+    clrscr();
+
+    fp = fopen("input.asm", "r");
+
+    if(fp == NULL)
+    {
+        printf("File not found");
+        getch();
+        return;
+    }
+
+    printf("\nPass 1 in progress\n");
+    pass1(fp);
+
+    printf("\nPass 2 in progress\n");
+    pass2(fp);
+
+    fclose(fp);
+
+    printf("\nOutput file generated: output.txt");
+    getch();
+}
