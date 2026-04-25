@@ -1,0 +1,174 @@
+#include<stdio.h>      // For input-output functions
+#include<conio.h>      // For clrscr() and getch()
+#include<string.h>     // For strcmp()
+#include<stdlib.h>     // For atoi()
+
+void main()
+{
+char opcode[10], operand[10], label[10]; // To store instruction parts
+char ch;                                 // For file display
+
+// Mnemonic table (simplified MOT)
+char mnemonic[10][10] = {
+    "START", "LDA", "STA", "LDCH", "STCH", "END"
+};
+
+int locctr, start, len;  // locctr = location counter
+int j;
+
+FILE *fp1, *fp2, *fp3;   // File pointers
+
+clrscr(); // Clear screen (Turbo C)
+
+// Open files
+fp1 = fopen("INPUT.DAT", "r");    // Input file
+fp2 = fopen("SYMTAB.DAT", "w");   // Symbol table file
+fp3 = fopen("OUT.DAT", "w");      // Output file
+
+// Check if files opened successfully
+if (fp1 == NULL || fp2 == NULL || fp3 == NULL)
+{
+    printf("Error opening file");
+    getch();
+    return;
+}
+
+// Read first line
+fscanf(fp1, "%s %s %s", label, opcode, operand);
+
+// Check for START directive
+if (strcmp(opcode, "START") == 0)
+{
+    start = atoi(operand);   // Convert starting address
+    locctr = start;          // Initialize LC
+
+    fprintf(fp3, "%s\t%s\t%s\n", label, opcode, operand);
+
+    // Read next instruction
+    fscanf(fp1, "%s %s %s", label, opcode, operand);
+}
+else
+{
+    locctr = 0;
+}
+
+// Process until END
+while (strcmp(opcode, "END") != 0)
+{
+    // Write current address to output file
+    fprintf(fp3, "%d", locctr);
+
+    // If label exists, store in symbol table
+    if (strcmp(label, "**") != 0)
+    {
+        fprintf(fp2, "%s\t%d\n", label, locctr);
+    }
+
+    // Search opcode in mnemonic table (MOT)
+    j = 0;
+    while (strcmp(mnemonic[j], "END") != 0)
+    {
+        if (strcmp(opcode, mnemonic[j]) == 0)
+        {
+            locctr += 3;  // Assume instruction length = 3
+            break;
+        }
+        j++;
+    }
+
+    // Handle pseudo-operations
+    if (strcmp(opcode, "WORD") == 0)
+        locctr += 3;
+    else if (strcmp(opcode, "RESW") == 0)
+        locctr += 3 * atoi(operand);
+    else if (strcmp(opcode, "RESB") == 0)
+        locctr += atoi(operand);
+    else if (strcmp(opcode, "BYTE") == 0)
+        locctr += 1;
+
+    // Write instruction to output file
+    fprintf(fp3, "\t%s\t%s\t%s\n", label, opcode, operand);
+
+    // Read next instruction
+    fscanf(fp1, "%s %s %s", label, opcode, operand);
+}
+
+// Write END statement
+fprintf(fp3, "%d\t%s\t%s\t%s\n", locctr, label, opcode, operand);
+
+// Close files
+fclose(fp1);
+fclose(fp2);
+fclose(fp3);
+
+// Display Input File
+printf("\n\nINPUT FILE:\n\n");
+fp1 = fopen("INPUT.DAT", "r");
+while ((ch = fgetc(fp1)) != EOF)
+    printf("%c", ch);
+fclose(fp1);
+
+// Display Output File
+printf("\n\nOUTPUT FILE:\n\n");
+fp3 = fopen("OUT.DAT", "r");
+while ((ch = fgetc(fp3)) != EOF)
+    printf("%c", ch);
+fclose(fp3);
+
+// Calculate and print program length
+len = locctr - start;
+printf("\n\nProgram Length = %d", len);
+
+// Display Symbol Table
+printf("\n\nSYMBOL TABLE:\n\n");
+fp2 = fopen("SYMTAB.DAT", "r");
+while ((ch = fgetc(fp2)) != EOF)
+    printf("%c", ch);
+fclose(fp2);
+
+getch(); // Wait for key press
+
+}
+
+
+
+
+
+
+B.2	Input and Output:
+
+INPUT.DAT	
+** START 2000	
+** LDA FIVE
+** STA ALPHA
+** LDCH CHARZ
+** STCH C1
+ALPHA RESW 1
+FIVE WORD 5	
+CHARZ BYTE C'Z'
+C1 RESB 1
+** END ** 
+
+SYMTAB.DAT (👉 Leave this EMPTY - just create file in notepad, program will fill it)
+ALPHA	2012
+FIVE	2015
+CHARZ	2018
+C1		2019
+
+
+OUT.DAT (👉 Leave this EMPTY - just create file in notepad, program will fill it)
+**		START	2000
+2000	**	LDA	FIVE
+2003	**	STA	ALPHA
+2006	**	LDCH	CHARZ
+2009	**	STCH	C1
+2012	ALPHA	RESW	1
+2015	FIVE	WORD	5
+2018	CHARZ	BYTE	C'Z'
+2019	C1	RESB	1
+2020	**	END	**
+
+In Turbo C Output: 
+•	Compile: Alt + F9
+•	Run: Ctrl + F9
+•	See output: Alt + F5)
