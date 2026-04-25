@@ -1,0 +1,76 @@
+STEPS ON FLEX WINDOWS:-
+✅ 🔧 1. Install required tools
+You need:
+•	Flex 
+•	GCC (comes with MinGW or similar) 
+•	Easiest setup:
+Install MinGW or a bundle like “WinFlexBison”.
+________________________________________
+✅ 📁 2. Create your Flex file
+1.	Open Notepad 
+2.	Paste your code 
+3.	Save as: 
+spccexp5.l
+⚠️ Important:
+•	Save type → All Files (.) 
+•	NOT .txt 
+________________________________________
+✅ 💻 3. Open Command Prompt
+Press:
+Win + R → type cmd → Enter
+________________________________________
+✅ 📂 4. Go to your file location
+Example:
+cd Desktop
+(or wherever you saved spccexp5.l)
+________________________________________
+✅ ⚙️ 5. Run Flex
+flex spccexp5.l
+👉 This creates:
+lex.yy.c
+________________________________________
+✅ 🛠️ 6. Compile using GCC
+gcc lex.yy.c -o spccexp5.exe
+👉 This creates:
+spccexp5.exe
+________________________________________
+✅ ▶️ 7. Run the program
+spccexp5.exe (or spccexp5)
+IF YOU WANT TO RUN AGAIN DIRECTLY WRITE ONLY THE FILENAME IN CMD INSIDE THE SAVED FOLDER (MAKE SURE .exe FILE EXIST FROM ABOVE STEPS)
+
+ 
+
+%option noyywrap
+
+%{
+#include <stdio.h>
+%}
+
+digit   [0-9]
+letter  [a-zA-Z]
+id      {letter}({letter}|{digit})*
+
+%%
+
+"int"|"float"|"char"|"if"|"else"|"while"|"return" { printf("Keyword: %s\n", yytext); }
+
+{id} { printf("Identifier: %s\n", yytext); }
+
+{digit}+ { printf("Number: %s\n", yytext); }
+
+"="|"+"|"-"|"*"|"/"|"%"|"<"|">"|"=="|"!="|"<="|">=" { printf("Operator: %s\n", yytext); }
+
+";"|","|"("|")"|"{"|"}"|"["|"]" { printf("Special Symbol: %s\n", yytext); }
+
+[ \t\n]+ ;
+
+. { printf("Invalid Token: %s\n", yytext); }
+
+%%
+
+int main()
+{
+    printf("Enter input:\n");
+    yylex();
+    return 0;
+}
