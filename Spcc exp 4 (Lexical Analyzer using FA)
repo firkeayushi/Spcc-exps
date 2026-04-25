@@ -1,0 +1,166 @@
+STEPS ON FLEX WINDOWS:-
+✅ 🔧 1. Install required tools
+You need:
+•	Flex 
+•	GCC (comes with MinGW or similar) 
+•	Easiest setup:
+Install MinGW or a bundle like “WinFlexBison”.
+________________________________________
+✅ 📁 2. Create your Flex file
+1.	Open Notepad 
+2.	Paste your code 
+3.	Save as: 
+spccexp4.l
+⚠️ Important:
+•	Save type → All Files (.) 
+•	NOT .txt 
+________________________________________
+✅ 💻 3. Open Command Prompt
+Press:
+Win + R → type cmd → Enter
+________________________________________
+✅ 📂 4. Go to your file location
+Example:
+cd Desktop
+(or wherever you saved spccexp4.l)
+________________________________________
+✅ ⚙️ 5. Run Flex
+flex spccexp4.l
+👉 This creates:
+lex.yy.c
+________________________________________
+✅ 🛠️ 6. Compile using GCC
+gcc lex.yy.c -o spccexp4.exe
+👉 This creates:
+spccexp4.exe
+________________________________________
+✅ ▶️ 7. Run the program
+spccexp4.exe (or spccexp4)
+IF YOU WANT TO RUN AGAIN DIRECTLY WRITE ONLY THE FILENAME IN CMD INSIDE THE SAVED FOLDER (MAKE SURE .exe FILE EXIST FROM ABOVE STEPS)
+
+
+
+
+Lexical Analyzer using Finite Automata:-
+%option noyywrap
+%{
+#include<stdio.h>
+%}
+
+%%
+"int"|"float"|"char"|"if"|"else"|"while"|"return"   { printf("Keyword: %s\n", yytext); }
+
+[0-9]+      { printf("Number: %s\n", yytext); }
+
+[a-zA-Z_][a-zA-Z0-9_]*   { printf("Identifier: %s\n", yytext); }
+
+[+\-*/=]   { printf("Operator: %s\n", yytext); }
+
+[;(){}]    { printf("Special Symbol: %s\n", yytext); }
+
+[ \t\n]    ;
+
+.          { printf("Invalid: %s\n", yytext); }
+%%
+
+int main()
+{
+    printf("Enter the code:\n");
+    yylex();
+    return 0;
+}
+
+
+
+
+
+Hello World:-
+%option noyywrap
+%{
+    #include<stdio.h>
+    #include<conio.h> 
+%}
+
+%%
+[a-z]   
+.      
+%%
+
+int main()
+{    
+    printf("hello world\n");
+    
+    // yylex(); 
+
+    getch(); 
+    
+    return 0;
+}
+
+
+
+
+
+Addition & Subtraction:-
+%option noyywrap
+%{
+    #include <stdio.h>
+    #include <conio.h> 
+    int a = 10;
+    int b = 5;
+%}
+
+%%
+[0-9]
+[a-z]
+.
+%%
+
+int main()
+{   
+    // 1. Addition
+    int sum = a + b;
+    printf("Addition: %d + %d = %d\n", a, b, sum);
+
+    // 2. Subtraction
+    int diff = a - b;
+    printf("Subtraction: %d - %d = %d\n", a, b, diff);
+
+    getch(); 
+    
+    return 0;
+}
+
+
+
+
+
+Even or Odd:-
+%option noyywrap
+%{
+#include<stdio.h>
+#include<conio.h>
+
+int num;
+%}
+
+%%
+[0-9]
+[a-z]
+.
+%%
+
+int main()
+{
+    printf("Enter a number: ");
+    scanf("%d",&num);
+
+    if(num % 2 == 0)
+        printf("%d is Even", num);
+    else
+        printf("%d is Odd", num);
+
+    getch();
+
+    return 0;
+}
