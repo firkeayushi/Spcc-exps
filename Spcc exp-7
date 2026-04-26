@@ -1,0 +1,296 @@
+#include<stdio.h>
+#include<conio.h>
+#include<string.h>
+#include<ctype.h>
+
+#define MAX 50
+
+/* -----------------------------
+   Global arrays for grammar
+------------------------------*/
+char prod[MAX][MAX];     // Productions
+char first[MAX][MAX];    // FIRST sets
+char follow[MAX][MAX];   // FOLLOW sets
+char nt[MAX];            // Non-terminals
+
+int n, ntCount = 0;
+
+/* -----------------------------
+   Check if symbol exists in set
+------------------------------*/
+int contains(char set[], char sym[])
+{
+    char temp[10];
+    char copy[100];
+    char *p;
+
+    strcpy(copy, set);
+    strcpy(temp, sym);
+
+    p = strtok(copy, " ");
+
+    while(p != NULL)
+    {
+        if(strcmp(p, temp) == 0)
+            return 1;
+
+        p = strtok(NULL, " ");
+    }
+    return 0;
+}
+
+/* -----------------------------
+   Add symbol into set (avoid duplicates)
+------------------------------*/
+void add(char set[], char sym[])
+{
+    if(!contains(set, sym))
+    {
+        if(strlen(set) > 0)
+            strcat(set, " ");
+        strcat(set, sym);
+    }
+}
+
+/* -----------------------------
+   Get index of Non-Terminal
+------------------------------*/
+int getIndex(char c)
+{
+    int i;
+    for(i=0;i<ntCount;i++)
+    {
+        if(nt[i] == c)
+            return i;
+    }
+    return -1;
+}
+
+/* -----------------------------
+   FIRST set computation
+------------------------------*/
+void findFirst(char c, int idx)
+{
+    int i, iidx;
+    char t[2];
+
+    iidx = getIndex(c);
+
+    /* If terminal → directly add */
+    if(!isupper(c) || iidx == -1)
+    {
+        t[0] = c;
+        t[1] = '\0';
+        add(first[idx], t);
+        return;
+    }
+
+    /* Scan productions */
+    for(i=0;i<n;i++)
+    {
+        if(prod[i][0] == c)
+        {
+            char *rhs = strchr(prod[i], '=') + 1;
+
+            /* If epsilon */
+            if(rhs[0] == '#')
+            {
+                add(first[idx], "#");
+            }
+            else
+            {
+                /* Recursively compute FIRST of RHS */
+                findFirst(rhs[0], idx);
+            }
+        }
+    }
+}
+
+/* -----------------------------
+   FOLLOW set computation
+------------------------------*/
+void findFollow(char c, int idx)
+{
+    int i, j, k, ni, li;
+    char *rhs;
+    char t[2];
+
+    /* Start symbol gets $ */
+    if(idx == 0)
+        add(follow[idx], "$");
+
+    for(i=0;i<n;i++)
+    {
+        rhs = strchr(prod[i], '=') + 1;
+
+        for(j=0; rhs[j] != '\0'; j++)
+        {
+            if(rhs[j] == c)
+            {
+                /* Case 1: symbol followed by terminal */
+                if(rhs[j+1] != '\0')
+                {
+                    char next = rhs[j+1];
+
+                    if(!isupper(next))
+                    {
+                        t[0] = next;
+                        t[1] = '\0';
+                        add(follow[idx], t);
+                    }
+                    else
+                    {
+                        /* Case 2: followed by non-terminal */
+                        ni = getIndex(next);
+
+                        if(ni != -1)
+                        {
+                            for(k=0; first[ni][k] != '\0'; k++)
+                            {
+                                if(first[ni][k] != '#')
+                                {
+                                    char temp[2];
+                                    temp[0] = first[ni][k];
+                                    temp[1] = '\0';
+                                    add(follow[idx], temp);
+                                }
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    /* Case 3: at end → copy FOLLOW of LHS */
+                    li = getIndex(prod[i][0]);
+                    if(li != idx)
+                        strcat(follow[idx], follow[li]);
+                }
+            }
+        }
+    }
+}
+
+/* -----------------------------
+   Remove LEFT recursion
+------------------------------*/
+void removeLeftRecursion()
+{
+    char lhs;
+    char alpha[MAX][MAX];
+    char beta[MAX][MAX];
+
+    int a=0, b=0, i;
+
+    lhs = prod[0][0];
+
+    for(i=0;i<n;i++)
+    {
+        char *rhs = strchr(prod[i], '=') + 1;
+
+        if(rhs[0] == lhs)
+            strcpy(alpha[a++], rhs+1);   // left recursive part
+        else
+            strcpy(beta[b++], rhs);      // non-recursive part
+    }
+
+    printf("\nGrammar after removing LEFT RECURSION:\n");
+
+    if(a == 0)
+    {
+        for(i=0;i<n;i++)
+            printf("%s\n", prod[i]);
+        return;
+    }
+
+    printf("%c=%s%c'\n", lhs, beta[0], lhs);
+    printf("%c'=%s%c' | #\n", lhs, alpha[0], lhs);
+
+    /* Store modified grammar */
+    sprintf(prod[0], "%c=%sZ", lhs, beta[0]);
+    sprintf(prod[1], "Z=%sZ", alpha[0]);
+    sprintf(prod[2], "Z=#");
+
+    n = 3;
+}
+
+/* -----------------------------
+   MAIN FUNCTION
+------------------------------*/
+void main()
+{
+    int i;
+
+    clrscr();
+
+    printf("Enter number of productions: ");
+    scanf("%d", &n);
+
+    printf("\nEnter productions (use # for epsilon):\n");
+
+    for(i=0;i<n;i++)
+    {
+        printf("Production %d: ", i+1);
+        scanf("%s", prod[i]);
+    }
+
+    /* Remove left recursion first */
+    removeLeftRecursion();
+
+    /* Collect non-terminals */
+    for(i=0;i<n;i++)
+    {
+        if(getIndex(prod[i][0]) == -1)
+            nt[ntCount++] = prod[i][0];
+    }
+
+    /* Initialize FIRST */
+    for(i=0;i<ntCount;i++)
+        first[i][0] = '\0';
+
+    for(i=0;i<ntCount;i++)
+        findFirst(nt[i], i);
+
+    printf("\nFIRST Sets:\n");
+    for(i=0;i<ntCount;i++)
+        printf("FIRST(%c) = { %s }\n", nt[i], first[i]);
+
+    /* Initialize FOLLOW */
+    for(i=0;i<ntCount;i++)
+        follow[i][0] = '\0';
+
+    for(i=0;i<ntCount;i++)
+        findFollow(nt[i], i);
+
+    printf("\nFOLLOW Sets:\n");
+    for(i=0;i<ntCount;i++)
+        printf("FOLLOW(%c) = { %s }\n", nt[i], follow[i]);
+
+    getch();
+}
+
+
+INPUT:-
+Enter number of productions: 2
+
+Enter productions (use # for epsilon):
+Production 1: E=E+T
+Production 2: E=T
+
+Grammar after removing LEFT RECURSION:
+E=TE'
+E'=+TE' | #
+
+FIRST Sets:
+FIRST(E) = { T }
+FIRST(Z) = { + # }
+
+FOLLOW Sets:
+FOLLOW(E) = { $ }
+FOLLOW(Z) = { $ }
+
+
+
+In Turbo C:-
+•	Compile: Alt + F9
+•	Run: Ctrl + F9
+•	See output: Alt + F5
