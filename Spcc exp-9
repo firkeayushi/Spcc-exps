@@ -3,18 +3,20 @@
 
 void main()
 {
-    int a, b, c, d;
-    int t1, t2, t3;
-    int x, y;
+    int a, b, c, d;     // Input variables
+    int t1, t2, t3;     // Temporary variables for optimization
+    int x, y;           // Variables for strength reduction
 
-    clrscr();
+    clrscr();           // Clears output screen (Turbo C)
 
+    /* INPUT SECTION */
     printf("Enter values of a, b, c, d: ");
     scanf("%d %d %d %d", &a, &b, &c, &d);
 
-    printf("\n----- BEFORE OPTIMIZATION (CSE) -----\n");
+    printf("\n----- BEFORE OPTIMIZATION (Common Sub-expression) -----\n");
 
-    /* Common Sub-expression (a+b repeated) */
+    /* BEFORE CSE:
+       (a + b) is calculated twice → redundant computation */
     t1 = (a + b) * c;
     t2 = (a + b) * d;
 
@@ -23,8 +25,11 @@ void main()
 
     printf("\n----- AFTER COMMON SUB-EXPRESSION ELIMINATION -----\n");
 
-    t3 = (a + b);
-    t1 = t3 * c;
+    /* AFTER CSE:
+       (a + b) is calculated once and reused */
+    t3 = (a + b);   // store common expression
+
+    t1 = t3 * c;    // reuse result
     t2 = t3 * d;
 
     printf("t1 = %d\n", t1);
@@ -32,20 +37,23 @@ void main()
 
     printf("\n----- STRENGTH REDUCTION -----\n");
 
+    /* INPUT for strength reduction */
     printf("Enter value of x: ");
     scanf("%d", &x);
 
-    /* Before optimization */
+    /* BEFORE STRENGTH REDUCTION:
+       multiplication is used (costly operation) */
     y = x * 2;
     printf("Before Strength Reduction y = %d\n", y);
 
-    /* After optimization */
+    /* AFTER STRENGTH REDUCTION:
+       multiplication replaced with addition (faster operation) */
     y = x + x;
+
     printf("After Strength Reduction y = %d\n", y);
 
-    getch();
+    getch();   // Waits for key press (Turbo C)
 }
-
 
 
 
