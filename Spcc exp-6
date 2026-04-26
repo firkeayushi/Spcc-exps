@@ -1,0 +1,267 @@
+✅ 1. EVEN NUMBER OF 0’s
+✔ Regular Expression:
+(1*01*01*)*
+________________________________________
+🔧 Steps in JFLAP (Manual DFA – BEST)
+1.	Open JFLAP 
+2.	Click → Finite Automaton 
+🔹 Create States
+•	q0 (even 0’s) 
+•	q1 (odd 0’s) 
+🔹 Set:
+•	q0 → Initial + Final 
+🔹 Add Transitions
+q0 --0--> q1
+q1 --0--> q0
+q0 --1--> q0
+q1 --1--> q1
+________________________________________
+🧠 Logic
+•	0 toggles state 
+•	1 does nothing 
+________________________________________
+✅ 2. STRING CONTAINING “ABA”
+✔ Regular Expression:
+(A|B)*ABA(A|B)*
+________________________________________
+🔧 Steps in JFLAP
+🔹 Create States
+•	q0 → initial 
+•	q1 → seen A 
+•	q2 → seen AB 
+•	q3 → seen ABA (final) 
+________________________________________
+🔹 Transitions
+q0 --A--> q1
+q0 --B--> q0
+
+q1 --A--> q1
+q1 --B--> q2
+
+q2 --A--> q3
+q2 --B--> q0
+
+q3 --A--> q3
+q3 --B--> q3
+________________________________________
+🧠 Logic
+•	Track sequence A → AB → ABA 
+•	Once found → stay in final state 
+________________________________________
+✅ 3. STARTS WITH “A” AND ENDS WITH “B”
+✔ Regular Expression:
+A(A|B)*B
+________________________________________
+🔧 Steps in JFLAP
+🔹 Create States
+•	q0 → start 
+•	q1 → valid started with A 
+•	q2 → last symbol is A 
+•	q3 → last symbol is B (FINAL if valid) 
+•	qd → dead state
+________________________________________
+🔹 Transitions
+q0 --A--> q1
+q0 --B--> qd
+
+q1 --A--> q2
+q1 --B--> q3
+
+q2 --A--> q2
+q2 --B--> q3
+
+q3 --A--> q2
+q3 --B--> q3
+
+qd --A--> qd
+qd --B--> qd________________________________________
+⚠️ Add DEAD state
+•	For invalid start (if starts with B) 
+•	Add new state → right click → set name “qd” or “qdead”.
+________________________________________
+✅ 4. STARTS WITH “AA” AND ENDS WITH “BB”
+✔ Regular Expression:
+AA(A|B)*BB
+________________________________________
+🔧 Steps in JFLAP
+🔹 Create States
+•	q0 → start 
+•	q1 → seen first A 
+•	q2 → seen AA (valid start done) 
+•	q3 → middle (any A/B) 
+•	q4 → last symbol B 
+•	q5 → last two symbols BB (FINAL) 
+•	qd → dead state________________________________________
+🔹 Transitions
+q0 --A--> q1
+q0 --B--> qd
+
+q1 --A--> q2
+q1 --B--> qd
+
+q2 --A--> q2
+q2 --B--> q3
+
+q3 --A--> q2
+q3 --B--> q4
+
+q4 --A--> q2
+q4 --B--> q5
+
+q5 --A--> q2
+q5 --B--> q5
+
+qd --A--> qd
+qd --B--> qd________________________________________
+⚠️ Important
+•	Must ensure ends with BB 
+•	So final state only when last two inputs are B 
+
+
+✅ 📥 Step 1: Install Java (IMPORTANT)
+JFLAP needs Java.
+🔹 Install:
+Java Runtime Environment or JDK
+👉 Download from Oracle or OpenJDK
+https://www.oracle.com/in/java/technologies/downloads/#jdk26-windows
+👉 x64 Installer (.exe)
+
+________________________________________
+🔹 Check installation
+Open CMD:
+java -version
+✔ If version shows → OK
+❌ If error → Java not installed properly
+________________________________________
+✅ 📥 Step 2: Download JFLAP
+1.	Go to official website
+👉 Search: JFLAP download 
+2.	Download: 
+JFLAP7.jar
+________________________________________
+✅ 📁 Step 3: Save file
+Save it anywhere, for example:
+Desktop / JFLAP folder
+________________________________________
+✅ ▶️ Step 4: Run JFLAP
+Method 1 (Easiest)
+Double-click:
+JFLAP7.jar
+________________________________________
+Method 2 (CMD)
+cd Desktop
+java -jar JFLAP7.jar
+________________________________________
+⚠️ If it doesn’t open
+❌ Problem:
+Double-click not working
+✔ Fix:
+Right click → Open with → Java
+OR use CMD:
+java -jar JFLAP7.jar
+________________________________________
+✅ 🎯 What you’ll see
+•	Menu with: 
+o	DFA 
+o	NFA 
+o	PDA 
+o	Grammar
+
+
+✅ 🎯 AIM YOU HAVE
+👉 Even number of 0’s in a string (DFA using JFLAP)
+________________________________________
+🔧 PART A: Open JFLAP
+1.	Run: 
+JFLAP7.jar
+2.	Select: 
+Finite Automaton
+________________________________________
+🟢 PART B: Create DFA (even number of 0’s)
+🔹 Step 1: Create States
+Click State Creator Tool (circle icon)
+Create 2 states:
+•	q0 
+•	q1 
+________________________________________
+🔹 Step 2: Set Start State
+👉 Right click on q0
+→ Click Initial
+________________________________________
+🔹 Step 3: Set Final State
+👉 Right click on q0
+→ Click Final
+✔ Because:
+•	Even number of 0’s includes 0, 2, 4... 
+•	So start state is also accepting 
+________________________________________
+🔹 Step 4: Add Transitions
+Click Transition Tool (arrow icon)
+Add transitions:
+1.	q0 → q1 with input: 0
+2.	q1 → q0 with input: 0
+3.	q0 → q0 with input: 1
+4.	q1 → q1 with input: 1
+________________________________________
+🧠 Logic
+State	Meaning
+q0	Even 0’s
+q1	Odd 0’s
+________________________________________
+▶️ PART C: Test your DFA
+1.	Click: 
+Input → Fast Run
+2.	Enter test strings: 
+✔ Accepted
+ε
+11
+0011
+1100
+❌ Rejected
+0
+10
+000
+________________________________________
+🔁 PART D: Convert REGEX → DFA (as per your AIM)
+🔹 Step 1: Go to menu
+File → New → Regular Expression
+________________________________________
+🔹 Step 2: Enter regex
+For even 0’s:
+(1*01*01*)*
+________________________________________
+🔹 Step 3: Convert to NFA
+Convert → Convert to NFA
+👉 Click:
+Do All
+________________________________________
+🔹 Step 4: Convert NFA → DFA
+File → Export
+Convert → Convert to DFA
+👉 Again click:
+Do All
+________________________________________
+🔹 Step 5: Minimize DFA (optional but good)
+Click → Complete & then → Done? → OK
+Convert → Minimize DFA
+________________________________________
+🎯 FINAL RESULT
+You will get:
+•	DFA with 2 states (same as manual one) 
+•	Correct for even number of 0’s 
+________________________________________
+🎤 Viva Questions (IMPORTANT)
+❓ Why 2 states?
+👉 Even / Odd tracking
+________________________________________
+❓ Why q0 is final?
+👉 Even includes 0 occurrences
+________________________________________
+❓ Regex used?
+👉 (1*01*01*)*
+________________________________________
+❓ Why use JFLAP?
+👉 Easy simulation of automata
+________________________________________
+🔥 One-line memory trick
+Even 0’s → 2 states → toggle on 0 → stay on 1
