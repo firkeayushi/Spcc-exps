@@ -1,0 +1,397 @@
+a. Predictive parser (spccexp8.c)
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <ctype.h>
+
+#define MAX_RULES 10
+#define MAX_RULE_LEN 20
+#define MAX_STACK 100
+#define MAX_TERMINALS 10
+#define MAX_NONTERMINALS 10
+
+/* Grammar data */
+char nonTerminals[MAX_NONTERMINALS] = {'E', 'X', 'T', 'Y', 'F'};
+int nonTermCount = 5;
+
+char terminals[MAX_TERMINALS] = {'i', '+', '*', '(', ')', '$'};
+int termCount = 6;
+
+/* Parsing table */
+char parsingTable[MAX_NONTERMINALS][MAX_TERMINALS][MAX_RULE_LEN] = {
+    {"TX",  "-",  "-",  "TX",  "-",  "-"},   /* E */
+    {"-",  "+TX", "-",  "-",  "#",  "#"},    /* X */
+    {"FY", "-",  "-",  "FY",  "-",  "-"},    /* T */
+    {"-",  "#",  "*FY", "-",  "#",  "#"},    /* Y */
+    {"i",  "-",  "-",  "(E)", "-",  "-"}     /* F */
+};
+
+/* function prototypes */
+int getTermIndex(char t);
+int getNonTermIndex(char nt);
+void printParsingTable();
+
+/* get terminal index */
+int getTermIndex(char t)
+{
+    int i;
+    for(i=0;i<termCount;i++)
+        if(terminals[i]==t)
+            return i;
+    return -1;
+}
+
+/* get non-terminal index */
+int getNonTermIndex(char nt)
+{
+    int i;
+    for(i=0;i<nonTermCount;i++)
+        if(nonTerminals[i]==nt)
+            return i;
+    return -1;
+}
+
+/* print parsing table */
+void printParsingTable()
+{
+    int i,j;
+
+    printf("\nParsing Table:\n\n");
+
+    printf("      ");
+    for(j=0;j<termCount;j++)
+        printf("%-8c", terminals[j]);
+
+    printf("\n");
+
+    for(i=0;i<nonTermCount;i++)
+    {
+        printf("%c     ", nonTerminals[i]);
+
+        for(j=0;j<termCount;j++)
+        {
+            if(strcmp(parsingTable[i][j], "-")==0)
+                printf("%-8s", "-");
+            else
+                printf("%c->%s  ", nonTerminals[i], parsingTable[i][j]);
+        }
+        printf("\n");
+    }
+
+    getch();
+
+}
+
+int main()
+{
+    char input[100];
+    char stack[MAX_STACK];
+    int top, ip, len;
+    char topSymbol, currentInput;
+    char *rule;
+    int row, col, ruleLen;
+    int i, k;
+
+    clrscr();
+
+    printf("Productions:\n");
+    printf("E=TX\nX=+TX\nX=#\nT=FY\nY=*FY\nY=#\nF=(E)\nF=i\n");
+
+    getch();
+
+    printf("\nFIRST Sets:\n");
+    printf("FIRST(E) = { ( i }\nFIRST(X) = { + # }\nFIRST(T) = { ( i }\nFIRST(Y) = { * # }\nFIRST(F) = { ( i }\n");
+
+    printf("\nFOLLOW Sets:\n");
+    printf("FOLLOW(E) = { $ ) }\nFOLLOW(X) = { $ ) }\nFOLLOW(T) = { + $ ) }\nFOLLOW(Y) = { + $ ) }\nFOLLOW(F) = { * + $ ) }\n");
+
+    getch();
+
+    printParsingTable();
+
+    printf("\nEnter string (use i for id): ");
+    scanf("%s", input);
+
+    len = strlen(input);
+    input[len] = '$';
+    input[len+1] = '\0';
+
+    /* stack init */
+    top = 0;
+    stack[top] = '$';
+    top++;
+    stack[top] = 'E';
+
+    ip = 0;
+
+    printf("\nStack\t\tInput\t\tAction\n");
+    printf("-----------------------------------------\n");
+
+    while(top >= 0)
+    {
+        /* print stack */
+        for(i=top;i>=0;i--)
+            printf("%c", stack[i]);
+
+        printf("\t\t");
+
+        /* print input */
+        for(i=ip;i<len+1;i++)
+            printf("%c", input[i]);
+
+        printf("\t\t");
+
+        topSymbol = stack[top];
+        currentInput = input[ip];
+
+        /* accept */
+        if(topSymbol=='$' && currentInput=='$')
+        {
+            printf("ACCEPT\n");
+            break;
+        }
+
+        /* terminal match */
+        if(getTermIndex(topSymbol)!=-1 || topSymbol=='$')
+        {
+            if(topSymbol==currentInput)
+            {
+                printf("MATCH %c\n", topSymbol);
+                top--;
+                ip++;
+            }
+            else
+            {
+                printf("ERROR\n");
+                break;
+            }
+        }
+        else
+        {
+            row = getNonTermIndex(topSymbol);
+            col = getTermIndex(currentInput);
+
+            rule = parsingTable[row][col];
+
+            if(strcmp(rule,"-")==0)
+            {
+                printf("ERROR\n");
+                break;
+            }
+
+            printf("%c->%s\n", topSymbol, rule);
+
+            top--;
+
+            ruleLen = strlen(rule);
+
+            if(!(ruleLen==1 && rule[0]=='#'))
+            {
+                for(i=ruleLen-1;i>=0;i--)
+                    stack[++top] = rule[i];
+            }
+        }
+    }
+    
+    getch();
+    return 0;
+}
+
+
+
+
+
+
+
+
+
+b. Operator precedence parser (spcc8b.c)
+#include <stdio.h>
+#include <conio.h>
+#include <string.h>
+
+#define MAX 50
+
+char stack[MAX];
+char input[MAX];
+char terminals[6] = {'i', '+', '*', '(', ')', '$'};
+
+char table[6][6] = {
+    {'>', '>', '>', '<', '>', '>'},  /* i */
+    {'<', '>', '<', '<', '>', '>'},  /* + */
+    {'<', '>', '>', '<', '>', '>'},  /* * */
+    {'<', '<', '<', '<', '=', ' '},  /* ( */
+    {'>', '>', '>', ' ', '>', '>'},  /* ) */
+    {'<', '<', '<', '<', ' ', '='}   /* $ */
+};
+
+int top, ip;
+
+/* find index */
+int getIndex(char c)
+{
+    int i;
+    for(i=0;i<6;i++)
+        if(terminals[i]==c)
+            return i;
+    return -1;
+}
+
+/* nearest terminal */
+int findTopTerminal()
+{
+    int i;
+    for(i=top;i>=0;i--)
+        if(getIndex(stack[i]) != -1)
+            return i;
+    return -1;
+}
+
+/* print stack */
+void printStack()
+{
+    int i;
+    for(i=0;i<=top;i++)
+        printf("%c", stack[i]);
+}
+
+/* print input */
+void printInput()
+{
+    int i;
+    for(i=ip; input[i]!='\0'; i++)
+        printf("%c", input[i]);
+}
+
+/* reduction rules */
+void reduce()
+{
+    if(stack[top]=='i')
+    {
+        stack[top]='E';
+        return;
+    }
+
+    if(top>=2 &&
+       stack[top-2]=='E' &&
+       stack[top-1]=='+' &&
+       stack[top]=='E')
+    {
+        top -= 2;
+        stack[top]='E';
+        return;
+    }
+
+    if(top>=2 &&
+       stack[top-2]=='E' &&
+       stack[top-1]=='*' &&
+       stack[top]=='E')
+    {
+        top -= 2;
+        stack[top]='E';
+        return;
+    }
+
+    if(top>=2 &&
+       stack[top-2]=='(' &&
+       stack[top-1]=='E' &&
+       stack[top]==')')
+    {
+        top -= 2;
+        stack[top]='E';
+        return;
+    }
+}
+
+void printTable()
+{
+    int i,j;
+
+    printf("\nOperator Precedence Table:\n\n");
+
+    printf("     ");
+    for(i=0;i<6;i++)
+        printf("%4c", terminals[i]);
+
+    printf("\n");
+
+    for(i=0;i<6;i++)
+    {
+        printf("%4c ", terminals[i]);
+        for(j=0;j<6;j++)
+            printf("%4c", table[i][j]);
+        printf("\n");
+    }
+}
+
+void main()
+{
+    char a,b,action;
+    int i1,i2;
+
+    clrscr();
+
+    /* ✔ PRODUCTIONS */
+    printf("Productions:\n");
+    printf("E -> E+E | E*E | (E) | i\n");
+
+    /* ✔ TABLE */
+    printTable();
+
+    printf("\nEnter input (end with $): ");
+    scanf("%s", input);
+
+    top = 0;
+    stack[top] = '$';
+    ip = 0;
+
+    printf("\nSTACK\tINPUT\tACTION\n");
+    printf("-----------------------------\n");
+
+    while(1)
+    {
+        printStack();
+        printf("\t");
+        printInput();
+        printf("\t");
+
+        a = stack[findTopTerminal()];
+        b = input[ip];
+
+        if(a=='$' && b=='$')
+        {
+            printf("ACCEPT\n");
+            break;
+        }
+
+        i1 = getIndex(a);
+        i2 = getIndex(b);
+
+        if(i1==-1 || i2==-1)
+        {
+            printf("ERROR\n");
+            break;
+        }
+
+        action = table[i1][i2];
+
+        if(action=='<' || action=='=')
+        {
+            printf("SHIFT\n");
+            stack[++top] = b;
+            ip++;
+        }
+        else if(action=='>')
+        {
+            printf("REDUCE\n");
+            reduce();
+        }
+        else
+        {
+            printf("ERROR\n");
+            break;
+        }
+    }
+
+    getch();
+}
