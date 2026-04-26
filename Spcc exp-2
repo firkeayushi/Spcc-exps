@@ -106,6 +106,7 @@ printf("\n\nINPUT FILE:\n\n");
 fp1 = fopen("INPUT.DAT", "r");
 while ((ch = fgetc(fp1)) != EOF)
     printf("%c", ch);
+getch();
 fclose(fp1);
 
 // Display Output File
