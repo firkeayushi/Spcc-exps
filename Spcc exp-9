@@ -1,0 +1,68 @@
+#include <stdio.h>
+#include <conio.h>
+
+void main()
+{
+    int a, b, c, d;
+    int t1, t2, t3;
+    int x, y;
+
+    clrscr();
+
+    printf("Enter values of a, b, c, d: ");
+    scanf("%d %d %d %d", &a, &b, &c, &d);
+
+    printf("\n----- BEFORE OPTIMIZATION (CSE) -----\n");
+
+    /* Common Sub-expression (a+b repeated) */
+    t1 = (a + b) * c;
+    t2 = (a + b) * d;
+
+    printf("t1 = %d\n", t1);
+    printf("t2 = %d\n", t2);
+
+    printf("\n----- AFTER COMMON SUB-EXPRESSION ELIMINATION -----\n");
+
+    t3 = (a + b);
+    t1 = t3 * c;
+    t2 = t3 * d;
+
+    printf("t1 = %d\n", t1);
+    printf("t2 = %d\n", t2);
+
+    printf("\n----- STRENGTH REDUCTION -----\n");
+
+    printf("Enter value of x: ");
+    scanf("%d", &x);
+
+    /* Before optimization */
+    y = x * 2;
+    printf("Before Strength Reduction y = %d\n", y);
+
+    /* After optimization */
+    y = x + x;
+    printf("After Strength Reduction y = %d\n", y);
+
+    getch();
+}
+
+
+
+
+
+
+OUTPUT:-
+Enter values of a, b, c, d: 2 3 4 5
+
+----- BEFORE OPTIMIZATION (CSE) -----
+t1 = 20
+t2 = 25
+
+----- AFTER COMMON SUB-EXPRESSION ELIMINATION -----
+t1 = 20
+t2 = 25
+
+----- STRENGTH REDUCTION -----
+Enter value of x: 6
+Before Strength Reduction y = 12
+After Strength Reduction y = 12
