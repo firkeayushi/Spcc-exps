@@ -1,0 +1,105 @@
+(spcc10.c)
+#include <stdio.h>
+#include <string.h>
+#include <conio.h>
+
+/* Structure to store one Three Address Code (TAC) instruction */
+typedef struct
+{
+    char op[10];      // Operator (+, -, *, /, =)
+    char arg1[10];    // First operand
+    char arg2[10];    // Second operand
+    char result[10];  // Result variable
+} TAC;
+
+/* Function to generate target code from TAC */
+void generateCode(TAC icode[], int n)
+{
+    int i;
+
+    printf("\n--- Generated Target Code ---\n");
+
+    /* Loop through each TAC instruction */
+    for(i = 0; i < n; i++)
+    {
+        /* Step 1: Load first operand into register
+           (Simulating getreg() in a simple way) */
+        printf("MOV R%d, %s\n", i, icode[i].arg1);
+
+        /* Step 2: Perform operation based on operator */
+        if(strcmp(icode[i].op, "+") == 0)
+        {
+            printf("ADD R%d, %s\n", i, icode[i].arg2);
+        }
+        else if(strcmp(icode[i].op, "-") == 0)
+        {
+            printf("SUB R%d, %s\n", i, icode[i].arg2);
+        }
+        else if(strcmp(icode[i].op, "*") == 0)
+        {
+            printf("MUL R%d, %s\n", i, icode[i].arg2);
+        }
+        else if(strcmp(icode[i].op, "/") == 0)
+        {
+            printf("DIV R%d, %s\n", i, icode[i].arg2);
+        }
+        else if(strcmp(icode[i].op, "=") == 0)
+        {
+            /* Assignment case: directly move value */
+            printf("MOV %s, R%d\n", icode[i].result, i);
+            continue;   // Skip further steps
+        }
+
+        /* Step 3: Store result from register into variable */
+        printf("MOV %s, R%d\n", icode[i].result, i);
+    }
+}
+
+/* Main function */
+void main()
+{
+    int n, i;
+    TAC icode[10];   // Array to store TAC statements
+
+    clrscr();        // Clear screen (Turbo C)
+
+    /* Input number of TAC instructions */
+    printf("Enter number of TAC statements: ");
+    scanf("%d", &n);
+
+    /* Input each TAC instruction */
+    for(i = 0; i < n; i++)
+    {
+        printf("Enter statement %d (op arg1 arg2 result): ", i + 1);
+
+        scanf("%s %s %s %s",
+              icode[i].op,
+              icode[i].arg1,
+              icode[i].arg2,
+              icode[i].result);
+    }
+
+    /* Generate target code */
+    generateCode(icode, n);
+
+    getch();   // Wait for key press
+}
+
+
+
+
+
+
+
+OUTPUT:-
+Enter the number of TAC statements: 2
+Enter statement 1 (op arg1 arg2 result): + x y z
+Enter statement 2 (op arg1 arg2 result): - a b c
+
+---Generated Target Code---
+MOV R0, X
+ADD R0, Y
+MOV Z, R0
+MOV R1, a
+SUB R1, b
+MOV C, R1
